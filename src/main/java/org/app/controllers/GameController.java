@@ -1,9 +1,11 @@
 package org.app.controllers;
 
 import org.app.model.GameModel;
+import org.app.model.User;
 import org.app.socket.ConnectionHandler;
 import org.app.socket.ConnectionManager;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.Socket;
 import java.time.Instant;
@@ -15,13 +17,10 @@ public class GameController extends Thread {
 
     private Logger logger = null;
 
-    private ConnectionManager connectionManager = null;
-
     private GameModel gameModel = null;
-    public GameController(ConnectionManager connectionManager, Logger logger) {
-        this.connectionManager = connectionManager;
+    public GameController(Logger logger, GameModel gameModel) {
         this.logger = logger;
-        this.gameModel = new GameModel();
+        this.gameModel = gameModel;
     }
 
     private void registerController() {
@@ -29,14 +28,9 @@ public class GameController extends Thread {
         Controller.registerController(JoinRoomController.__NAME__, new JoinRoomController());
         Controller.registerController(InfoController.__NAME__, new InfoController());
         Controller.registerController(RankingController.__NAME__, new RankingController());
+        Controller.registerController(StartGameController.__NAME__, new StartGameController());
+        Controller.registerController(QuestionController.__NAME__, new QuestionController());
     }
-
-    private void sendServerStats(GameModel gameModel, Logger logger, ConnectionHandler connectionHandler) throws Exception {
-        Controller infoController = Controller.getController(InfoController.__NAME__);
-        String infoResponse = infoController.handle(gameModel, logger, new String[]{});
-        connectionHandler.write(infoResponse);
-    }
-
 
     public void startGame() throws Exception {
         int n_round = 2;
@@ -44,53 +38,59 @@ public class GameController extends Thread {
 
         Random rand = new Random();
 
-        for (Socket connection : this.connectionManager.getConnections()) {
-            ConnectionHandler connectionHandler = new ConnectionHandler(connection, this.logger);
-            connectionHandler.write("START_GAME\0");
+        for (User user : this.gameModel.getReadyUsers()) {
+            Controller controller = Controller.getController(StartGameController.__NAME__);
+            String response = controller.handle(this.gameModel, this.logger, user, new String[] {});
+            user.write(response);
         }
 
         for (int round = 1; round <= n_round; ++round) {
-            int a = rand.nextInt(100);
-            int b = rand.nextInt(100);
+            this.gameModel.startNewRound();
 
-            Instant timestamp = Instant.now();
-
-            for (Socket connection : this.connectionManager.getConnections()) {
-                ConnectionHandler connectionHandler = new ConnectionHandler(connection, this.logger);
-                connectionHandler.write("QUESTION " + Integer.toString(a) + " + "+ Integer.toString(b) + " " + Long.toString(timestamp.getEpochSecond()) + " 30\0");
+            for (User user : this.gameModel.getReadyUsers()) {
+                String questionMessage = Controller.getController(QuestionController.__NAME__).handle(this.gameModel, this.logger, user, new String[]{});
+                user.write(questionMessage);
             }
+
+
 
             Boolean isFirst = true;
 
-            while (timestamp.getEpochSecond() + duration > Instant.now().getEpochSecond()) {
-                for (Socket connection : this.connectionManager.getConnections()) {
-                    ConnectionHandler connectionHandler = new ConnectionHandler(connection, this.logger);
+            while (this.gameModel.gameBoard.timestamp.getEpochSecond() + duration > Instant.now().getEpochSecond()) {
+                for (User user : this.gameModel.getReadyUsers()) {
 
-                    String msg = connectionHandler.read();
+                    if (user.answer != null) {
+                        continue;
+                    }
+
+                    String msg = user.read();
+
+                    if (msg == null) {
+                        continue;
+                    }
 
                     String[] args = msg.split(" ");
 
-                    if (args.length != 2) {
-                        connectionHandler.write("INVALID\0");
+                    if (args.length != 2 || args[0].compareTo("ANSWER") != 0) {
+                        user.write("INVALID\0");
                         continue;
                     } else {
-                        connectionHandler.write("VALID\0");
+                        user.write("VALID\0");
                     }
                     Integer answer = Integer.parseInt(args[1]);
 
-                    if (answer == a + b) {
-
+                    if (answer.equals(this.gameModel.gameBoard.expectedResult)) {
+                        user.point++;
                     }
                 }
                 break;
             }
 
             Controller rankingController = Controller.getController(RankingController.__NAME__);
-            String rankingMsg = rankingController.handle(gameModel, logger, new String[]{});
-            for (Socket connection : this.connectionManager.getConnections()) {
-                ConnectionHandler connectionHandler = new ConnectionHandler(connection, this.logger);
 
-                connectionHandler.write(rankingMsg);
+            for (User user : this.gameModel.getReadyUsers()) {
+                String rankingMsg = rankingController.handle(gameModel, logger, user, new String[]{});
+                user.write(rankingMsg);
             }
 
         }
@@ -100,40 +100,54 @@ public class GameController extends Thread {
     public void run() {
         this.registerController();
 
-        while (true) {
-            for (Socket connection : this.connectionManager.getConnections()) {
-                ConnectionHandler connectionHandler = new ConnectionHandler(connection, logger);
 
+        while (this.gameModel.numReadyUsers() < 1) {
+            for (User user : this.gameModel.getUsers()) {
+
+                if (user.isReady) {
+                    continue;
+                }
+
+                String msg = null;
                 try {
-                    this.sendServerStats(this.gameModel, this.logger, connectionHandler);
-                } catch (Exception e) {
+                    msg = user.read();
+                    if (msg != null) {
+                        this.logger.info(msg);
+                    }
+
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
 
-                String msg = connectionHandler.read();
+                if (msg == null) {
+                    continue;
+                }
+
                 String[] args = msg.split(" ");
-                this.logger.info(args[0]);
                 Controller controller = Controller.getController(args[0]);
 
                 if (controller == null) {
                     continue;
                 }
+
                 String response = null;
                 try {
-                    response = controller.handle(this.gameModel, logger, Arrays.copyOfRange(args, 1, args.length));
+                    response = controller.handle(this.gameModel, logger, user, Arrays.copyOfRange(args, 1, args.length));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
-                connectionHandler.write(response);
-            }
-
-            if (this.gameModel.getUsernames().size() > 0) {
                 try {
-                    this.startGame();
-                } catch (Exception e) {
+                    user.write(response);
+                } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
+        }
+
+        try {
+            this.startGame();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

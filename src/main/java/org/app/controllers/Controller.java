@@ -1,6 +1,7 @@
 package org.app.controllers;
 
 import org.app.model.GameModel;
+import org.app.model.User;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.logging.Logger;
 public class Controller {
     public static Map<String, Controller> controllerMap = new HashMap<>();
 
-    public String handle(GameModel gameModels, Logger loggers, String[] args) throws Exception {
+    public String handle(GameModel gameModels, Logger loggers, User user, String[] args) throws Exception {
         return null;
     }
 

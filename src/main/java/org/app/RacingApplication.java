@@ -1,5 +1,7 @@
 package org.app;
 
+import org.app.controllers.GameController;
+import org.app.socket.ConnectionManager;
 import org.app.socket.TCPServer;
 
 import java.io.IOException;
@@ -10,20 +12,23 @@ public class RacingApplication {
     static Logger logger = Logger.getLogger("root");
     static int APPLICATION_PORT = 6969;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         logger.info(String.format("Starting TCP Server at port %d", APPLICATION_PORT));
         TCPServer server = null;
+        ConnectionManager connectionManager = new ConnectionManager(logger);
+
         try {
-            server = new TCPServer(APPLICATION_PORT, logger);
+            server = new TCPServer(APPLICATION_PORT, logger, connectionManager);
         } catch (IOException exception) {
             logger.severe(exception.getMessage());
             return;
         }
+
+        GameController gameController = new GameController(connectionManager, logger);
+
         logger.info("Successfully!");
 
-        logger.info("Ready to serve requests!");
         server.start();
-        logger.info("Server is stopped!");
-
+        gameController.start();
     }
 }

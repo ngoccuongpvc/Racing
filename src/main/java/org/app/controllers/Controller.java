@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 public class Controller {
     public static Map<String, Controller> controllerMap = new HashMap<>();
 
-    public String handle(GameModel gameModels, Logger loggers, String[] args) {
+    public String handle(GameModel gameModels, Logger loggers, String[] args) throws Exception {
         return null;
     }
 

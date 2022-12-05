@@ -9,4 +9,9 @@ public class GameModel {
     public List<String> getUsernames() {
         return this.usernames;
     }
+
+    public boolean addUsername(String username) {
+        this.usernames.add(username);
+        return true;
+    }
 }

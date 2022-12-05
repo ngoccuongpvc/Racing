@@ -26,7 +26,6 @@ public class RacingApplication {
             return;
         }
 
-        Controller.registerController(PingController.__NAME__, new PingController());
         GameController gameController = new GameController(connectionManager, logger);
 
         logger.info("Successfully!");

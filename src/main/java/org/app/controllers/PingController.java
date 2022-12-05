@@ -10,7 +10,7 @@ public class PingController extends Controller{
     public static final String __NAME__ = "PING";
 
     @Override
-    public String handle(GameModel gameModels, Logger loggers, User user, String[] args) {
+    public String handle(GameModel gameModels, Logger logger, User user, String[] args) {
         return "PONG";
     }
 }

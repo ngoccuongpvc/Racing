@@ -36,13 +36,14 @@ public class GameController extends Thread {
         int n_round = 2;
         int duration = 30;
 
-        Random rand = new Random();
-
         for (User user : this.gameModel.getReadyUsers()) {
             Controller controller = Controller.getController(StartGameController.__NAME__);
             String response = controller.handle(this.gameModel, this.logger, user, new String[] {});
             user.write(response);
         }
+
+        // Sleep for 3 seconds
+        Thread.sleep(3000);
 
         for (int round = 1; round <= n_round; ++round) {
             this.gameModel.startNewRound();
@@ -68,6 +69,7 @@ public class GameController extends Thread {
                     if (msg == null) {
                         continue;
                     }
+                    this.logger.info(String.format("%s: %s", user.username, msg));
 
                     String[] args = msg.split(" ");
 
@@ -83,7 +85,6 @@ public class GameController extends Thread {
                         user.point++;
                     }
                 }
-                break;
             }
 
             Controller rankingController = Controller.getController(RankingController.__NAME__);
@@ -100,8 +101,9 @@ public class GameController extends Thread {
     public void run() {
         this.registerController();
 
-
         while (this.gameModel.numReadyUsers() < 1) {
+            Boolean newUserJoined = false;
+
             for (User user : this.gameModel.getUsers()) {
 
                 if (user.isReady) {
@@ -141,10 +143,29 @@ public class GameController extends Thread {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
+                newUserJoined = true;
+            }
+
+            if (newUserJoined) {
+                Controller controller = Controller.getController(InfoController.__NAME__);
+                for (User user : this.gameModel.getReadyUsers()) {
+                    String msg = null;
+                    try {
+                        msg = controller.handle(this.gameModel, this.logger, user, new String[]{});
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                    try {
+                        user.write(msg);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
             }
         }
 
         try {
+            this.logger.info("Game start!");
             this.startGame();
         } catch (Exception e) {
             throw new RuntimeException(e);

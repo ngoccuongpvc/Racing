@@ -9,7 +9,7 @@ public class AnswerController extends Controller {
 
 
     @Override
-    public String handle(GameModel gameModels, Logger loggers, User user, String[] args) throws Exception {
+    public String handle(GameModel gameModels, Logger logger, User user, String[] args) throws Exception {
         return null;
     }
 }

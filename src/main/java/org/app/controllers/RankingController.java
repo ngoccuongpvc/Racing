@@ -11,7 +11,7 @@ public class RankingController extends Controller {
     public static String __NAME__ = "RANKING";
 
     @Override
-    public String handle(GameModel gameModels, Logger loggers, User user, String[] args) throws Exception {
+    public String handle(GameModel gameModels, Logger logger, User user, String[] args) throws Exception {
         List<String> usernames = gameModels.getUsernames();
         List<Integer> points = gameModels.getPoints();
 

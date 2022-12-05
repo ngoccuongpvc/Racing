@@ -42,7 +42,7 @@ public class TCPServer extends Thread {
         this.selector = Selector.open();
         this.serverSocketChannel = ServerSocketChannel.open();
         this.serverSocket = serverSocketChannel.socket();
-        this.serverSocket.bind(new InetSocketAddress("localhost", port));
+        this.serverSocket.bind(new InetSocketAddress("0.0.0.0", port));
         this.serverSocketChannel.configureBlocking(false);
         this.serverSocketChannel.register(selector, serverSocketChannel.validOps(),null);
 
@@ -53,9 +53,7 @@ public class TCPServer extends Thread {
     public void run() {
         this.logger.info("Ready to serve requests!");
         try {
-            List<SocketChannel> temp = new ArrayList<>();
 
-            Boolean flag = true;
             while (true) {
                 selector.select();
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();

@@ -19,6 +19,7 @@ public class GameBoard {
         this.secondNumber = secondNumber;
         this.operator = operator;
         this.expectedResult = expectedResult;
+        this.timestamp = Instant.now();
     }
 
     public static GameBoard generateGame() {

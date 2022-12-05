@@ -11,7 +11,7 @@ public class StartGameController extends Controller{
     private static final String msg = "START_GAME\0";
 
     @Override
-    public String handle(GameModel gameModels, Logger loggers, User user, String[] args) throws Exception {
+    public String handle(GameModel gameModels, Logger logger, User user, String[] args) throws Exception {
         return StartGameController.msg;
     }
 }

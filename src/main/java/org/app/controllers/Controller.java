@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 public class Controller {
     public static Map<String, Controller> controllerMap = new HashMap<>();
 
-    public String handle(GameModel gameModels, Logger loggers, User user, String[] args) throws Exception {
+    public String handle(GameModel gameModels, Logger logger, User user, String[] args) throws Exception {
         return null;
     }
 

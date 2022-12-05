@@ -45,12 +45,8 @@ public class User {
     }
 
     public Boolean write(String msg) throws IOException {
-        if (this.key.isWritable()) {
-            this.client.write(ByteBuffer.wrap(msg.getBytes()));
-            return true;
-        } else {
-            return false;
-        }
+        this.client.write(ByteBuffer.wrap(msg.getBytes()));
+        return true;
     }
 
     public void resetAnswer() {

@@ -1,6 +1,8 @@
 package org.app;
 
+import org.app.controllers.Controller;
 import org.app.controllers.GameController;
+import org.app.controllers.PingController;
 import org.app.socket.ConnectionManager;
 import org.app.socket.TCPServer;
 
@@ -24,6 +26,7 @@ public class RacingApplication {
             return;
         }
 
+        Controller.registerController(PingController.__NAME__, new PingController());
         GameController gameController = new GameController(connectionManager, logger);
 
         logger.info("Successfully!");

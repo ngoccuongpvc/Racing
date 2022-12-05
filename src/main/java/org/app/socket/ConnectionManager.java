@@ -4,6 +4,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class ConnectionManager {
     private volatile List<Socket> connections = new ArrayList<>();
@@ -19,6 +20,6 @@ public class ConnectionManager {
     }
 
     public synchronized List<Socket> getConnections() {
-        return this.connections;
+        return this.connections.stream().filter(c -> !c.isClosed()).collect(Collectors.toList());
     }
 }

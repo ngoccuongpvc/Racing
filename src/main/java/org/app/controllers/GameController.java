@@ -18,6 +18,8 @@ public class GameController extends Thread {
     private static final Integer N_USER = 1;
     private static final Integer N_ROUND = 3;
 
+    private static final Integer DURATION = 10;
+
     private Logger logger = null;
 
     private GameModel gameModel = null;
@@ -38,7 +40,6 @@ public class GameController extends Thread {
     }
 
     public void startGame() throws Exception {
-        int duration = 30;
 
         for (User user : this.gameModel.getReadyUsers()) {
             Controller controller = Controller.getController(StartGameController.__NAME__);
@@ -62,7 +63,7 @@ public class GameController extends Thread {
 
             Boolean isFirst = true;
 
-            while (this.gameModel.gameBoard.timestamp.getEpochSecond() + duration > Instant.now().getEpochSecond()) {
+            while (this.gameModel.gameBoard.timestamp.getEpochSecond() + DURATION > Instant.now().getEpochSecond()) {
                 for (User user : this.gameModel.getReadyUsers()) {
 
                     if (user.answer != null) {

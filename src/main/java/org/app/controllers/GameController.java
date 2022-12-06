@@ -15,6 +15,9 @@ import java.util.logging.Logger;
 
 public class GameController extends Thread {
 
+    private static final Integer N_USER = 1;
+    private static final Integer N_ROUND = 3;
+
     private Logger logger = null;
 
     private GameModel gameModel = null;
@@ -35,7 +38,6 @@ public class GameController extends Thread {
     }
 
     public void startGame() throws Exception {
-        int n_round = 2;
         int duration = 30;
 
         for (User user : this.gameModel.getReadyUsers()) {
@@ -47,7 +49,7 @@ public class GameController extends Thread {
         // Sleep for 3 seconds
         Thread.sleep(3000);
 
-        for (int round = 1; round <= n_round; ++round) {
+        for (int round = 1; round <= N_ROUND; ++round) {
             this.gameModel.startNewRound();
 
 
@@ -124,7 +126,7 @@ public class GameController extends Thread {
         while (true) {
 
 
-            while (this.gameModel.numReadyUsers() < 1) {
+            while (this.gameModel.numReadyUsers() < N_USER) {
                 Boolean newUserJoined = false;
 
                 for (User user : this.gameModel.getUsers()) {

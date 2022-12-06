@@ -21,6 +21,10 @@ public class User {
 
     public Instant timestamp = null;
 
+    public Integer consecutiveFailedAnswer = 0;
+
+    public Boolean isEliminated = false;
+
     public User(SelectionKey key, String username, Integer point) {
         this.key = key;
         this.client = (SocketChannel) key.channel();

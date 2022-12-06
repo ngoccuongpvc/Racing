@@ -30,6 +30,8 @@ public class GameController extends Thread {
         Controller.registerController(RankingController.__NAME__, new RankingController());
         Controller.registerController(StartGameController.__NAME__, new StartGameController());
         Controller.registerController(QuestionController.__NAME__, new QuestionController());
+        Controller.registerController(EndGameController.__NAME__, new EndGameController());
+        Controller.registerController(AnswerController.__NAME__, new AnswerController());
     }
 
     public void startGame() throws Exception {
@@ -74,7 +76,7 @@ public class GameController extends Thread {
 
                     String[] args = msg.split(" ");
 
-                    if (args.length != 2 || args[0].compareTo("ANSWER") != 0) {
+                    if (args.length != 2 || user.isEliminated || args[0].compareTo("ANSWER") != 0) {
                         user.write("INVALID\0");
                         continue;
                     } else {
@@ -84,6 +86,14 @@ public class GameController extends Thread {
 
                     if (answer.equals(this.gameModel.gameBoard.expectedResult)) {
                         user.point++;
+                        user.consecutiveFailedAnswer = 0;
+                    } else {
+                        user.point--;
+                        user.consecutiveFailedAnswer ++;
+                        if (user.consecutiveFailedAnswer == 3) {
+                            user.isEliminated = true;
+                            user.write("ELIMINATED\0");
+                        }
                     }
                 }
             }
@@ -93,8 +103,15 @@ public class GameController extends Thread {
             for (User user : this.gameModel.getReadyUsers()) {
                 String rankingMsg = rankingController.handle(gameModel, logger, user, new String[]{});
                 user.write(rankingMsg);
+                this.logger.info(rankingMsg);
             }
 
+        }
+
+        for (User user : this.gameModel.getReadyUsers()) {
+            Controller controller = Controller.getController(EndGameController.__NAME__);
+            String response = controller.handle(this.gameModel, this.logger, user, new String[] {});
+            user.write(response);
         }
 
         this.gameModel.reset();

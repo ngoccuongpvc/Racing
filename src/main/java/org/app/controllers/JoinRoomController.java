@@ -16,6 +16,12 @@ public class JoinRoomController extends Controller {
             throw new Exception("Invalid number of arguments");
         }
 
+        for (User u : gameModels.getUsers()) {
+            if (u.username != null && u.username.equals(args[0])) {
+                return "DUPLICATE\0";
+            }
+        }
+
         logger.info(String.format("%s joined room", args[0]));
 
         user.username = args[0];

@@ -8,8 +8,8 @@ import java.time.Instant;
 
 public class User {
 
-    private SelectionKey key;
-    private SocketChannel client;
+    public SelectionKey key;
+    public SocketChannel client;
 
     public String username;
 
@@ -28,12 +28,16 @@ public class User {
         this.point = point;
     }
 
-    public String read() throws IOException {
+    public String read() {
         if (this.key.isReadable()) {
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             String msg = null;
 
-            this.client.read(buffer);
+            try {
+                this.client.read(buffer);
+            } catch (IOException e) {
+                //do nothing
+            }
             msg = new String(buffer.array()).trim();
             if (msg.length() > 0) {
                 return msg;
@@ -44,8 +48,15 @@ public class User {
         }
     }
 
-    public Boolean write(String msg) throws IOException {
-        this.client.write(ByteBuffer.wrap(msg.getBytes()));
+    public Boolean write(String msg) {
+        if (!this.isActive()) {
+            return false;
+        }
+        try {
+            this.client.write(ByteBuffer.wrap(msg.getBytes()));
+        } catch (IOException e) {
+            // do nothing
+        }
         return true;
     }
 
@@ -54,4 +65,7 @@ public class User {
         this.timestamp = null;
     }
 
+    public Boolean isActive() {
+        return !this.client.socket().isClosed();
+    }
 }

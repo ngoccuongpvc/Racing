@@ -1,5 +1,6 @@
 package org.app.model;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -45,13 +46,13 @@ public class GameModel {
     }
 
     public synchronized List<User> getReadyUsers() {
-        return this.users.stream().filter(u -> u.isReady).collect(Collectors.toList());
+        return this.users.stream().filter(u -> u.isReady && !u.client.socket().isClosed()).collect(Collectors.toList());
     }
 
     public synchronized Integer numReadyUsers() {
         Integer count = 0;
         for (User user : this.users) {
-            if (user.isReady) {
+            if (user.isReady && user.isActive()) {
                 count += 1;
             }
         }
@@ -63,5 +64,16 @@ public class GameModel {
         for (User user : this.getReadyUsers()) {
             user.resetAnswer();
         }
+    }
+
+    public synchronized void reset() {
+        for (User user : this.users) {
+            try {
+                user.client.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        this.users.clear();
     }
 }

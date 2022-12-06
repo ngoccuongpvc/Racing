@@ -48,6 +48,7 @@ public class GameController extends Thread {
         for (int round = 1; round <= n_round; ++round) {
             this.gameModel.startNewRound();
 
+
             for (User user : this.gameModel.getReadyUsers()) {
                 String questionMessage = Controller.getController(QuestionController.__NAME__).handle(this.gameModel, this.logger, user, new String[]{});
                 user.write(questionMessage);
@@ -95,80 +96,73 @@ public class GameController extends Thread {
             }
 
         }
+
+        this.gameModel.reset();
     }
 
     @Override
     public void run() {
         this.registerController();
 
-        while (this.gameModel.numReadyUsers() < 1) {
-            Boolean newUserJoined = false;
+        while (true) {
 
-            for (User user : this.gameModel.getUsers()) {
 
-                if (user.isReady) {
-                    continue;
-                }
+            while (this.gameModel.numReadyUsers() < 1) {
+                Boolean newUserJoined = false;
 
-                String msg = null;
-                try {
+                for (User user : this.gameModel.getUsers()) {
+
+                    if (user.isReady) {
+                        continue;
+                    }
+
+                    String msg = null;
                     msg = user.read();
                     if (msg != null) {
                         this.logger.info(msg);
                     }
 
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                    if (msg == null) {
+                        continue;
+                    }
 
-                if (msg == null) {
-                    continue;
-                }
+                    String[] args = msg.split(" ");
+                    Controller controller = Controller.getController(args[0]);
 
-                String[] args = msg.split(" ");
-                Controller controller = Controller.getController(args[0]);
+                    if (controller == null) {
+                        continue;
+                    }
 
-                if (controller == null) {
-                    continue;
-                }
-
-                String response = null;
-                try {
-                    response = controller.handle(this.gameModel, logger, user, Arrays.copyOfRange(args, 1, args.length));
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                try {
-                    user.write(response);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                newUserJoined = true;
-            }
-
-            if (newUserJoined) {
-                Controller controller = Controller.getController(InfoController.__NAME__);
-                for (User user : this.gameModel.getReadyUsers()) {
-                    String msg = null;
+                    String response = null;
                     try {
-                        msg = controller.handle(this.gameModel, this.logger, user, new String[]{});
+                        response = controller.handle(this.gameModel, logger, user, Arrays.copyOfRange(args, 1, args.length));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                    try {
+                    user.write(response);
+                    newUserJoined = true;
+                }
+
+                if (newUserJoined) {
+                    Controller controller = Controller.getController(InfoController.__NAME__);
+                    for (User user : this.gameModel.getReadyUsers()) {
+                        String msg = null;
+                        try {
+                            msg = controller.handle(this.gameModel, this.logger, user, new String[]{});
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
                         user.write(msg);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
                     }
                 }
             }
-        }
 
-        try {
-            this.logger.info("Game start!");
-            this.startGame();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            try {
+                this.logger.info("Game start!");
+                this.startGame();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

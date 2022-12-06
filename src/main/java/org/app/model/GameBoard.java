@@ -31,24 +31,24 @@ public class GameBoard {
         Integer expectedResult = null;
 
         if (operator == '+') {
-            firstNumber = random.nextInt(100);
-            secondNumber = random.nextInt(100);
+            firstNumber = random.nextInt(1, 100);
+            secondNumber = random.nextInt(1, 100);
             expectedResult = firstNumber + secondNumber;
         } else if (operator == '-') {
-            firstNumber = random.nextInt(100);
-            secondNumber = random.nextInt(100);
+            firstNumber = random.nextInt(1, 100);
+            secondNumber = random.nextInt(1, 100);
             expectedResult = firstNumber - secondNumber;
         } else if (operator == '*') {
-            firstNumber = random.nextInt(100);
-            secondNumber = random.nextInt(100);
+            firstNumber = random.nextInt(1, 100);
+            secondNumber = random.nextInt(1, 100);
             expectedResult = firstNumber * secondNumber;
         } else if (operator == '/') {
-            secondNumber = random.nextInt(100);
-            expectedResult = random.nextInt(10);
+            secondNumber = random.nextInt(1, 100);
+            expectedResult = random.nextInt(1, 10);
             firstNumber = secondNumber * expectedResult;
         } else if (operator == '%') {
-            firstNumber = random.nextInt(100);
-            secondNumber = random.nextInt(100);
+            firstNumber = random.nextInt(1, 100);
+            secondNumber = random.nextInt(1, 100);
             expectedResult = firstNumber % secondNumber;
         }
         return new GameBoard(firstNumber, secondNumber, operator, expectedResult);

@@ -52,33 +52,32 @@ public class TCPServer extends Thread {
     @Override
     public void run() {
         this.logger.info("Ready to serve requests!");
-        try {
 
             while (true) {
-                selector.select();
-                Set<SelectionKey> selectedKeys = selector.selectedKeys();
-                Iterator<SelectionKey> i = selectedKeys.iterator();
+                try {
+                    selector.select();
+                    Set<SelectionKey> selectedKeys = selector.selectedKeys();
+                    Iterator<SelectionKey> i = selectedKeys.iterator();
 
-                while (i.hasNext()) {
-                    SelectionKey key = i.next();
+                    while (i.hasNext()) {
+                        SelectionKey key = i.next();
 
-                    if (key.isAcceptable()) {
-                        SocketChannel client = this.serverSocketChannel.accept();
-                        client.configureBlocking(false);
-                        SelectionKey selectionKey = client.register(selector, SelectionKey.OP_READ);
-                        User user = new User(selectionKey, null, 0);
-                        this.gameModel.addUser(user);
-                        this.logger.info("Accepted new request!");
+                        if (key.isAcceptable()) {
+                            SocketChannel client = this.serverSocketChannel.accept();
+                            client.configureBlocking(false);
+                            SelectionKey selectionKey = client.register(selector, SelectionKey.OP_READ);
+                            User user = new User(selectionKey, null, 0);
+                            this.gameModel.addUser(user);
+                            this.logger.info("Accepted new request!");
+
+                        }
+                        i.remove();
 
                     }
-                    i.remove();
-
+                } catch (Exception exception) {
+                    this.logger.info(exception.getMessage());
                 }
             }
-        } catch (IOException exception) {
-            this.logger.severe(exception.getMessage());
-        } finally {
-            this.logger.info("Server is stopped!");
-        }
+
     }
 }
